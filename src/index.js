@@ -109,6 +109,25 @@ app.post("/messages", async (req, res) => {
 	}
 });
 
+app.get("/messages", async (req, res) => {
+	const limit = Number(req.query.limit);
+	const from = req.headers.user;
+
+	try {
+		const messages = await db.collection("messages").find().toArray();
+		const filteredMessages = messages.filter((m) => m.from === from || m.to === from || m.to === "Todos");
+
+		if (limit) {
+			res.send(filteredMessages.slice(-limit));
+		} else {
+			res.send(filteredMessages);
+		}
+	} catch (err) {
+		console.log(err);
+		res.sendStatus(500);
+	}
+});
+
 app.listen(5000, () => {
 	console.log("App is running on port 5000");
 });
