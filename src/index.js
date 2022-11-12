@@ -34,19 +34,17 @@ try {
 app.post("/participants", async (req, res) => {
 	const body = req.body;
 
-	const validation = participantSchema.validate(body);
-
-	if (validation.error) {
-		const errors = validation.error.details.map((detail) => detail.message);
-		res.status(422).send(errors);
-		return;
-	}
-
 	try {
 		const findParticipant = await db.collection("participants").findOne({ name: body.name });
-
 		if (findParticipant) {
 			res.status(409).send("Participante já cadastrado");
+			return;
+		}
+
+		const { error } = participantSchema.validate(body);
+		if (error) {
+			const errors = error.details.map((detail) => detail.message);
+			res.status(422).send(errors);
 			return;
 		}
 
@@ -82,24 +80,21 @@ app.get("/participants", async (req, res) => {
 app.post("/messages", async (req, res) => {
 	const { to, text, type } = req.body;
 	const from = req.headers.user;
-	console.log("🚀 ~ file: index.js ~ line 85 ~ app.post ~ from", from);
-
-	const validation = messageSchema.validate(req.body);
-
-	if (validation.error) {
-		const errors = validation.error.details.map((detail) => detail.message);
-		res.status(422).send(errors);
-		return;
-	}
-
-	const findParticipant = await db.collection("participants").findOne({ name: from });
-
-	if (!findParticipant) {
-		res.status(422).send("Participante não existe");
-		return;
-	}
 
 	try {
+		const findParticipant = await db.collection("participants").findOne({ name: from });
+
+		if (!findParticipant) {
+			return res.status(422).send("Participante não existe");
+		}
+
+		const { error } = messageSchema.validate(req.body, { abortEarly: false });
+
+		if (error) {
+			const errors = error.details.map((detail) => detail.message);
+			return res.status(422).send(errors);
+		}
+
 		await db.collection("messages").insertOne({
 			from,
 			to,
