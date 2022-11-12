@@ -128,6 +128,24 @@ app.get("/messages", async (req, res) => {
 	}
 });
 
+app.post("/status", async (req, res) => {
+	const from = req.headers.user;
+
+	try {
+		const findParticipant = await db.collection("participants").findOne({ name: from });
+		if (!findParticipant) {
+			return res.status(404).send("Participante não existe");
+		}
+
+		await db.collection("participants").updateOne({ name: from }, { $set: { lastStatus: Date.now() } });
+
+		res.sendStatus(200);
+	} catch (err) {
+		console.log(err);
+		res.sendStatus(500);
+	}
+});
+
 app.listen(5000, () => {
 	console.log("App is running on port 5000");
 });
