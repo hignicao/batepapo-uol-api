@@ -31,6 +31,21 @@ try {
 	console.log(err);
 }
 
+setInterval(removeUsers, 15000);
+
+async function removeUsers() {
+	try {
+		const now = Date.now();
+		const participants = await db.collection("participants").find().toArray();
+		const participantsForRemoval = participants.filter((participant) => now - participant.lastStatus >= 10000);
+		participantsForRemoval.forEach(async (participant) => {
+			await db.collection("participants").deleteOne({ _id: ObjectId(participant._id) });
+		});
+	} catch (err) {
+		console.log(err);
+	}
+}
+
 app.post("/participants", async (req, res) => {
 	const body = req.body;
 
