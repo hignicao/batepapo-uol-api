@@ -40,6 +40,13 @@ async function removeUsers() {
 		const participantsForRemoval = participants.filter((participant) => now - participant.lastStatus >= 10000);
 		participantsForRemoval.forEach(async (participant) => {
 			await db.collection("participants").deleteOne({ _id: ObjectId(participant._id) });
+			await db.collection("messages").insertOne({
+				from: participant.name,
+				to: "Todos",
+				text: "sai da sala...",
+				type: "status",
+				time: format(new Date(), "HH:mm:ss"),
+			});
 		});
 	} catch (err) {
 		console.log(err);
